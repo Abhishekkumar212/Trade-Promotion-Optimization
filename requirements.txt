@@ -1,0 +1,15 @@
+# requirements.txt
+
+fastapi
+uvicorn
+pandas
+numpy
+scipy
+matplotlib
+seaborn
+python-multipart
+Jinja2
+itsdangerous
+# starlette is a dependency of fastapi, usually installed with it.
+# If you encounter issues, you might add:
+# starlette==0.36.3 
