@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card mb-4">
+    <div class="card-header bg-success text-white">
+        <h4>Optimization Results for {{ category_name }} ({{ num_optimized_products }} Product(s) Optimized)</h4>
+        <p class="mb-0 small">Goal: Maximize {{ optimization_goal }}</p>
+    </div>
+    <div class="card-body">
+        <!-- ... (all the tables and plots) ... -->
+        <h5 class="card-title">Total Metrics for Optimized Products: Planned vs. Optimized</h5>
+        <div class="table-responsive mb-4">
+            <table class="table table-bordered">
+                <thead class="table-light">
+                    <tr>
+                        {% for column in total_subset_columns %}
+                        <th>{{ column }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in total_subset_data %}
+                    <tr>
+                        <td>{{ row['Data-Totals'] }}</td>
+                        <td>{{ row['Planned'] }}</td>
+                        <td>{{ row['Optimized'] }}</td>
+                        <td class="{% if row['% Change'] != '' and row['% Change'] != '∞ %' and (row['% Change']|replace('%','')|float > 0) %}text-success{% elif row['% Change'] != '' and row['% Change'] != '∞ %' and (row['% Change']|replace('%','')|float < 0) %}text-danger{% endif %}">
+                            {{ row['% Change'] }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if total_full_category_data %}
+        <h5 class="card-title mt-4">Impact on Full Category '{{ category_name }}': Planned vs. Optimized State</h5>
+        <p class="small text-muted">This table shows the overall category metrics, where non-optimized products contribute their original planned values to both sides.</p>
+        <div class="table-responsive mb-4">
+            <table class="table table-bordered">
+                <thead class="table-light">
+                    <tr>
+                        {% for column in total_full_category_columns %}
+                        <th>{{ column }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in total_full_category_data %}
+                    <tr>
+                        <td>{{ row['Data-Totals'] }}</td>
+                        <td>{{ row['Planned'] }}</td>
+                        <td>{{ row['Optimized State'] }}</td> <!-- Changed column name for clarity -->
+                        <td class="{% if row['% Change'] != '' and row['% Change'] != '∞ %' and (row['% Change']|replace('%','')|float > 0) %}text-success{% elif row['% Change'] != '' and row['% Change'] != '∞ %' and (row['% Change']|replace('%','')|float < 0) %}text-danger{% endif %}">
+                            {{ row['% Change'] }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+
+        <h5 class="card-title mt-4">Details for Optimized Products</h5>
+        <div class="table-responsive mb-4">
+            <table class="table table-bordered table-striped table-hover">
+                <thead class="table-light">
+                    <tr>
+                        {% for column in optimized_columns %}
+                        <th>{{ column.replace('_', ' ').replace('Percent', '%') }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in optimized_data %}
+                    <tr>
+                        {% for column_key in optimized_columns %}
+                        <td>
+                            {{ row[column_key] }}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <hr class="my-4">
+        <h3 class="text-center mb-4">Visualizations for Optimized Products</h3>
+
+        <!-- Graph 1: Planned vs Optimized Margin -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6>Product-Level Planned vs. Optimized Margin (for Optimized Products)</h6>
+            </div>
+            <div class="card-body text-center">
+                {% if plots.plot_planned_vs_optimized_margin %}
+                <img src="data:image/png;base64,{{ plots.plot_planned_vs_optimized_margin }}" alt="Planned vs Optimized Margin" class="img-fluid" style="max-height: 500px;">
+                <p class="mt-2 small text-muted">Compares planned vs. optimized margin for each product selected for optimization.</p>
+                {% else %} <p>Margin comparison plot not available.</p> {% endif %}
+            </div>
+        </div>
+
+        <!-- Graph 2: Planned vs Optimized Revenue -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6>Product-Level Planned vs. Optimized Revenue (for Optimized Products)</h6>
+            </div>
+            <div class="card-body text-center">
+                {% if plots.plot_planned_vs_optimized_revenue %}
+                <img src="data:image/png;base64,{{ plots.plot_planned_vs_optimized_revenue }}" alt="Planned vs Optimized Revenue" class="img-fluid" style="max-height: 500px;">
+                <p class="mt-2 small text-muted">Compares planned vs. optimized revenue for each product selected for optimization.</p>
+                {% else %} <p>Revenue comparison plot not available.</p> {% endif %}
+            </div>
+        </div>
+
+        <!-- Graph 3: Top/Bottom Performers Bar Charts -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6>Performance Analysis (for Optimized Products)</h6>
+            </div>
+            <div class="card-body">
+                 <p class="small text-muted">Highlights optimized products by revenue/margin increase and discount applied.</p>
+                <div class="row">
+                    <div class="col-md-12 mb-3 text-center">
+                        <strong>Revenue Increase (%)</strong><br>
+                        {% if plots.revenue_increase %}<img src="data:image/png;base64,{{ plots.revenue_increase }}" alt="Revenue Increase" class="img-fluid" style="max-height: 450px;">
+                        {% else %}<p>Plot not available.</p>{% endif %}
+                    </div>
+                    <div class="col-md-12 mb-3 text-center">
+                        <strong>Margin Increase (%)</strong><br>
+                        {% if plots.margin_increase %}<img src="data:image/png;base64,{{ plots.margin_increase }}" alt="Margin Increase" class="img-fluid" style="max-height: 450px;">
+                        {% else %}<p>Plot not available.</p>{% endif %}
+                    </div>
+                    <div class="col-md-12 text-center">
+                        <strong>Optimized Discount Applied (%)</strong><br>
+                        {% if plots.optimized_discount_applied %}<img src="data:image/png;base64,{{ plots.optimized_discount_applied }}" alt="Optimized Discount" class="img-fluid" style="max-height: 450px;">
+                        {% else %}<p>Plot not available.</p>{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Graph 4: Investment Allocation Pie Chart -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6>Optimized Investment Allocation (for Optimized Products)</h6>
+            </div>
+            <div class="card-body text-center" style="min-height: 450px;">
+                {% if plots.plot_investment_allocation_pie %}
+                <img src="data:image/png;base64,{{ plots.plot_investment_allocation_pie }}" alt="Investment Allocation" class="img-fluid" style="max-height: 400px; display: block; margin-left: auto; margin-right: auto;">
+                <p class="mt-2 small text-muted">Shows investment distribution among the optimized products.</p>
+                {% else %} <p>Plot not available.</p> {% endif %}
+            </div>
+        </div>
+
+        <!-- Graph 5: Cumulative Revenue & Margin Growth Curve (for Optimized Products) -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6>Hypothetical Cumulative Growth (for Optimized Products if Uniform Discount Applied)</h6>
+            </div>
+            <div class="card-body text-center">
+                 {% if plots.plot_cumulative_growth_curve %}
+                <img src="data:image/png;base64,{{ plots.plot_cumulative_growth_curve }}" alt="Cumulative Growth Curve" class="img-fluid" style="max-height: 500px;">
+                <p class="mt-2 small text-muted">Shows hypothetical cumulative revenue/margin if a uniform discount were applied across only the selected/optimized products.</p>
+                {% else %} <p>Plot not available.</p> {% endif %}
+            </div>
+        </div>
+
+        <!-- Graph 6: ROI (Return on Investment) by Product (for Optimized Products) -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6>Return on Investment (ROI) (for Optimized Products)</h6>
+            </div>
+            <div class="card-body text-center">
+                {% if plots.plot_roi_by_product %}
+                <img src="data:image/png;base64,{{ plots.plot_roi_by_product }}" alt="ROI by Product" class="img-fluid" style="max-height: 600px;">
+                <p class="mt-2 small text-muted">Shows ROI for each optimized product.</p>
+                {% else %} <p>Plot not available.</p> {% endif %}
+            </div>
+        </div>
+
+        <!-- Graph 7: Volume vs. Margin Trade-off Bubble Chart (for Optimized Products) -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6>Volume vs. Margin Trade-off (for Optimized Products)</h6>
+            </div>
+            <div class="card-body text-center">
+                {% if plots.plot_volume_margin_tradeoff_bubble %}
+                <img src="data:image/png;base64,{{ plots.plot_volume_margin_tradeoff_bubble }}" alt="Volume vs Margin Trade-off" class="img-fluid" style="max-height: 600px;">
+                <p class="mt-2 small text-muted">Visualizes volume vs. margin trade-off for optimized products. Bubble size is optimized revenue.</p>
+                {% else %} <p>Plot not available.</p> {% endif %}
+            </div>
+        </div>
+
+        <hr class="my-4">
+        
+        <!-- Main form for "Mark as Processed" -->
+        <form action="/process_results_page" method="post" id="processResultsForm">
+            <input type="hidden" name="session_id" value="{{ session_id }}">
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <a href="/" class="btn btn-secondary me-md-2">Start Over (New Category)</a>
+                
+                <!-- MODIFIED: Changed "Re-select Products" to an <a> tag outside the main form's submit scope -->
+                <a href="/go_to_product_selection?session_id={{ session_id }}&category={{ category_name }}" 
+                   class="btn btn-info me-md-2">Re-select Products in '{{ category_name }}'</a>
+                
+                <button type="submit" class="btn btn-primary">Mark as Processed & View Again</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if processed %}
+<div class="alert alert-success mt-4">
+    Optimization results for {{ num_optimized_products }} product(s) in '{{ category_name }}' (Goal: Maximize {{ optimization_goal }}) marked as processed! You can start a new optimization or review these results.
+</div>
+{% endif %}
+{% endblock %}

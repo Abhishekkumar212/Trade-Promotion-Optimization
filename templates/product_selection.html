@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-info text-white">
+        <h4>Select Products & Constraints for '{{ category_name }}'</h4>
+    </div>
+    <div class="card-body">
+        <form action="/prepare_plan_view" method="post" id="productSelectionForm">
+            <input type="hidden" name="session_id" value="{{ session_id }}">
+            
+            <h5>1. Choose Products for Optimization:</h5>
+            <div class="mb-2 form-check">
+                <input type="checkbox" class="form-check-input" id="selectAllProducts">
+                <label class="form-check-label" for="selectAllProducts"><strong>Select All / Deselect All Products</strong></label>
+            </div>
+
+            <div class="mb-3">
+                {% if product_list %}
+                    <ul class="list-group product-selection-list">
+                        {% for product_name in product_list %}
+                        <li class="list-group-item">
+                            <div class="form-check">
+                                <input class="form-check-input product-checkbox" type="checkbox" name="selected_products" value="{{ product_name }}" id="product_{{ loop.index }}">
+                                <label class="form-check-label" for="product_{{ loop.index }}">
+                                    {{ product_name }}
+                                </label>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted">No products found for this category. Cannot select products.</p>
+                {% endif %}
+            </div>
+            <div id="productSelectionErrorContainer"></div> <!-- For error message -->
+
+
+            <h5 class="mt-4">2. Define Optimization Goal & Constraints for Selected Products:</h5>
+            <div class="mb-3">
+                <label for="optimization_goal" class="form-label">Optimization Goal:</label>
+                <select class="form-select" id="optimization_goal" name="optimization_goal" required>
+                    <option value="Revenue" {% if current_params.optimization_goal == 'Revenue' or not current_params.optimization_goal %}selected{% endif %}>Maximize Revenue</option>
+                    <option value="Margin" {% if current_params.optimization_goal == 'Margin' %}selected{% endif %}>Maximize Margin</option>
+                    <option value="Both" {% if current_params.optimization_goal == 'Both' %}selected{% endif %}>Maximize Both (Revenue & Margin)</option>
+                </select>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="max_investment" class="form-label">Max Investment for Selected ($):</label>
+                    <input type="number" class="form-control" id="max_investment" name="max_investment" value="{{ current_params.max_investment | default(10000) }}" min="0" step="any" required>
+                    <div class="invalid-feedback">Please enter a valid maximum investment.</div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="lower_discount" class="form-label">Lower Discount Range (%):</label>
+                    <input type="number" class="form-control" id="lower_discount" name="lower_discount" value="{{ current_params.lower_discount | default(0) }}" min="0" max="100" step="0.1" required>
+                     <div class="invalid-feedback">Please enter a valid lower discount (0-100).</div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="upper_discount" class="form-label">Upper Discount Range (%):</label>
+                    <input type="number" class="form-control" id="upper_discount" name="upper_discount" value="{{ current_params.upper_discount | default(10) }}" min="0" max="100" step="0.1" required>
+                    <div class="invalid-feedback">Please enter a valid upper discount (0-100).</div>
+                </div>
+            </div>
+            <div id="discountRangeErrorContainer"></div> <!-- For discount range error -->
+            
+            <div class="d-flex justify-content-between mt-4">
+                <a href="/" class="btn btn-secondary">Back to Category Selection</a>
+                <button type="submit" class="btn btn-primary">Review Plan for Selected Products</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('productSelectionForm');
+    const productErrorContainer = document.getElementById('productSelectionErrorContainer');
+    const discountErrorContainer = document.getElementById('discountRangeErrorContainer');
+    const selectAllCheckbox = document.getElementById('selectAllProducts');
+    const productCheckboxes = form.querySelectorAll('.product-checkbox'); // Use specific class
+
+    // Initialize and manage "Select All" checkbox functionality
+    if (selectAllCheckbox) {
+        if (productCheckboxes.length === 0) {
+            selectAllCheckbox.disabled = true;
+            selectAllCheckbox.checked = false;
+        } else {
+            selectAllCheckbox.disabled = false;
+            // Set initial state of "Select All" based on individual checkboxes
+            // (though by default none are checked, this handles page reloads/back button scenarios)
+            const allCurrentlyChecked = Array.from(productCheckboxes).every(cb => cb.checked);
+            selectAllCheckbox.checked = allCurrentlyChecked;
+
+            selectAllCheckbox.addEventListener('change', function() {
+                productCheckboxes.forEach(checkbox => {
+                    checkbox.checked = selectAllCheckbox.checked;
+                });
+            });
+
+            productCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const allChecked = Array.from(productCheckboxes).every(cb => cb.checked);
+                    selectAllCheckbox.checked = allChecked;
+                });
+            });
+        }
+    }
+
+    form.addEventListener('submit', function(event) {
+        let localIsValid = true;
+        form.localValidationPassed = false; // Custom flag for base.html to check
+
+        productErrorContainer.innerHTML = ''; // Clear previous product errors
+        discountErrorContainer.innerHTML = ''; // Clear previous discount errors
+
+        // Check if at least one product is selected (only if products are available)
+        if (productCheckboxes.length > 0) {
+            const selectedProducts = form.querySelectorAll('input[name="selected_products"]:checked');
+            if (selectedProducts.length === 0) {
+                localIsValid = false;
+                const errorMsg = document.createElement('div');
+                errorMsg.className = 'alert alert-danger mt-1 p-2';
+                errorMsg.textContent = 'Please select at least one product for optimization.';
+                productErrorContainer.appendChild(errorMsg);
+            }
+        } else if (document.querySelector('.product-selection-list')) {
+            // This case means product_list was empty from server, so no selection is possible.
+            // No error message needed here as the UI already states "No products found".
+            // If submission implies products are mandatory, backend should handle this.
+            // For client-side, if no products, can't select any, so 'selection' criteria is moot.
+        }
+
+
+        // Check discount range validity
+        const lowerDiscountInput = form.querySelector('input[name="lower_discount"]');
+        const upperDiscountInput = form.querySelector('input[name="upper_discount"]');
+        if (lowerDiscountInput && upperDiscountInput) {
+            const lower = parseFloat(lowerDiscountInput.value);
+            const upper = parseFloat(upperDiscountInput.value);
+            if (!isNaN(lower) && !isNaN(upper) && lower > upper) {
+                localIsValid = false;
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'alert alert-danger mt-2';
+                errorDiv.textContent = 'Lower discount range cannot be greater than upper discount range.';
+                discountErrorContainer.appendChild(errorDiv);
+            }
+        }
+        
+        // Check general required fields (numbers, select)
+        form.querySelectorAll('input[type="number"][required], select[required]').forEach(input => {
+            if (!input.value || (input.type === 'number' && isNaN(parseFloat(input.value)))) {
+                localIsValid = false;
+                input.classList.add('is-invalid');
+            } else {
+                input.classList.remove('is-invalid');
+            }
+        });
+
+
+        if (!localIsValid) {
+            event.preventDefault(); // Stop form submission if not valid by local checks
+        } else {
+            form.localValidationPassed = true; // Signal to global script that local checks passed
+            // The global script in base.html will handle tpoLoader.show() and disabling button
+        }
+    });
+});
+</script>
+{% endblock %}

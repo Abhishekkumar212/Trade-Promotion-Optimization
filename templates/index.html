@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h4>Select Category</h4>
+    </div>
+    <div class="card-body">
+        <form action="/show_product_selection" method="post">
+            <input type="hidden" name="session_id" value="{{ session_id }}">
+
+            <div class="mb-3">
+                <label for="category" class="form-label">Choose a Category:</label>
+                <div class="btn-group w-100" role="group" aria-label="Category selection">
+                    <input type="radio" class="btn-check" name="category" id="tea" value="Tea" autocomplete="off" checked>
+                    <label class="btn btn-outline-primary" for="tea">Tea</label>
+
+                    <input type="radio" class="btn-check" name="category" id="poha" value="Poha" autocomplete="off">
+                    <label class="btn btn-outline-primary" for="poha">Poha</label>
+
+                    <input type="radio" class="btn-check" name="category" id="coffee" value="Coffee" autocomplete="off">
+                    <label class="btn btn-outline-primary" for="coffee">Coffee</label>
+
+                    <input type="radio" class="btn-check" name="category" id="spices" value="Spices" autocomplete="off">
+                    <label class="btn btn-outline-primary" for="spices">Spices</label>
+
+                    <input type="radio" class="btn-check" name="category" id="masala" value="Masala" autocomplete="off">
+                    <label class="btn btn-outline-primary" for="masala">Masala</label>
+                </div>
+            </div>
+            
+            <!-- Global constraints like optimization_goal could be moved to product_selection.html 
+                 or kept here if they apply globally even before product selection.
+                 For this iteration, we'll move them to product_selection.html for clarity
+                 as they apply to the *selected products' optimization*.
+            -->
+
+            <button type="submit" class="btn btn-primary w-100 mt-3">Proceed to Product Selection</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

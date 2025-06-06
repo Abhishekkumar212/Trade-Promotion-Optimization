@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h4>Planned Data - {{ category_display_name | default("Selected Products") }}</h4>
+    </div>
+    <div class="card-body">
+        {% if error %}
+        <div class="alert alert-danger" role="alert">
+            <strong>Optimization Error:</strong><br>{{ error|safe }}
+        </div>
+        {% endif %}
+
+        <p>Review the planned data below for category: <strong>{{ params.category }}</strong> ({{ params.num_selected_products | default('All') }} product(s) selected for optimization).
+        <br>The business constraints and goal you set for this selection are:</p>
+        <ul>
+            <li>Optimization Goal: <strong>{{ params.optimization_goal | default('Revenue') }}</strong></li>
+            <li>Maximum Investment for Selected: ${{ params.max_investment | default(0) | float | round(2) }}</li>
+            <li>Discount Range for Selected: {{ params.lower_discount | default(0) }}% to {{ params.upper_discount | default(0) }}%</li>
+        </ul>
+
+        <form action="/optimize_run" method="post">
+            <input type="hidden" name="session_id" value="{{ session_id }}">
+            <!-- Pass all necessary params again for the optimization call -->
+            <input type="hidden" name="max_investment" value="{{ params.max_investment }}">
+            <input type="hidden" name="lower_discount" value="{{ params.lower_discount }}">
+            <input type="hidden" name="upper_discount" value="{{ params.upper_discount }}">
+            <input type="hidden" name="optimization_goal" value="{{ params.optimization_goal }}">
+            
+            <h5>Planned Data for Selected Products</h5>
+            {% if data %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            {% for column in columns %}
+                            <th>{{ column.replace('_', ' ') }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in data %}
+                        <tr>
+                            {% for column in columns %}
+                            <td>
+                                {{ row[column] }}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">No products were selected or data is unavailable for the plan view.</p>
+            {% endif %}
+
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
+                 <!-- MODIFIED: Changed to an <a> tag for GET request -->
+                <a href="/go_to_product_selection?session_id={{ session_id }}&category={{ params.category }}" 
+                   class="btn btn-secondary me-md-2">Back to Product Selection</a>
+                
+                {% if data %} <!-- Only show optimize button if there's data to optimize -->
+                <button type="submit" class="btn btn-success">Optimize Selected Products Now</button>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

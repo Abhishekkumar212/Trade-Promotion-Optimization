@@ -1,0 +1,124 @@
+body {
+    background-color: #f8f9fa;
+}
+
+.card {
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    border-radius: 10px 10px 0 0 !important;
+}
+
+.table {
+    margin-bottom: 0;
+}
+
+.table th {
+    background-color: #f1f1f1;
+    font-weight: 600;
+}
+
+.btn-group .btn {
+    flex: 1;
+}
+
+.navbar-brand img {
+    margin-right: 10px;
+}
+
+footer {
+    border-radius: 10px 10px 0 0;
+}
+
+/* For better table readability with new columns */
+.table-responsive {
+    overflow-x: auto;
+}
+.table td, .table th {
+    white-space: nowrap; /* Prevent text wrapping in cells if not desired */
+}
+/* ... existing styles ... */
+
+
+/* Loader styles - TPO Specific */
+.tpo-loader-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(248, 249, 250, 0.85); /* Using body background color with more opacity */
+    z-index: 1056; /* Higher than Bootstrap modals (1050-1055) if any were used */
+    display: none; /* Hidden by default */
+    justify-content: center;
+    align-items: center;
+    flex-direction: column; /* To stack spinner and text */
+}
+
+.tpo-spinner {
+    width: 3rem;
+    height: 3rem;
+    border: 0.3em solid currentColor;
+    border-right-color: transparent; /* Makes the spinning effect */
+    border-radius: 50%;
+    animation: tpo-spinner-spin .75s linear infinite;
+    color: #0d6efd; /* Bootstrap primary blue */
+}
+
+.tpo-loader-text {
+    margin-top: 1rem;
+    font-size: 1.1rem;
+    color: #212529; /* Bootstrap default text color */
+    font-weight: 500;
+}
+
+
+@keyframes tpo-spinner-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+
+/* For better table readability with new columns */
+.table-responsive {
+    overflow-x: auto;
+}
+.table td, .table th {
+    white-space: nowrap; /* Prevent text wrapping in cells if not desired */
+}
+
+/* For product_selection.html */
+.product-selection-list { /* Applied to ul.list-group */
+    max-height: 300px; 
+    overflow-y: auto;
+    border: 1px solid #ced4da; /* Bootstrap default border color */
+    /* padding: 10px; REMOVED - list-group-item handles padding */
+    border-radius: .25rem; /* Bootstrap default border-radius */
+    margin-bottom: 0; /* Ensure no extra margin if it's a ul.list-group */
+}
+/* Ensure list items in the selection list don't have bottom borders if inside a bordered ul */
+.product-selection-list .list-group-item {
+    border-left: none;
+    border-right: none;
+    border-top: none; /* Remove top border for all but the first */
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+.product-selection-list .list-group-item:first-child {
+    border-top: none; /* No top border for the first item as UL has border */
+}
+.product-selection-list .list-group-item:last-child {
+    border-bottom: none; /* No bottom border for the last item as UL has border */
+}
+
+/* Ensure form-check takes full width for easier clicking if desired, or keep default */
+.product-selection-list .list-group-item .form-check {
+    min-height: auto; /* Override Bootstrap default if it adds too much height */
+    padding-left: 1.5em; /* Align with typical checkbox padding */
+}
+.product-selection-list .list-group-item .form-check .form-check-label {
+    padding-left: 0.25em;
+}
